@@ -2,10 +2,12 @@ import { Module } from '@nestjs/common';
 import { MinioClientService } from './minio-client.service';
 import { MinioModule } from 'nestjs-minio-client';
 import { ConfigModule, ConfigService } from '@nestjs/config';
+import { MinioClientController } from './minio-client.controller';
 
 @Module({
   providers: [MinioClientService],
   exports: [MinioClientService],
+  controllers: [MinioClientController],
   imports: [
     MinioModule.registerAsync({
       imports: [ConfigModule],

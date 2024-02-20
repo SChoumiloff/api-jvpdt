@@ -12,7 +12,8 @@ import * as argon2 from 'argon2';
 
 export enum Role {
   Admin = 'ADMIN',
-  User = 'AUTHOR',
+  User = 'USER',
+  Author = 'AUTHOR'
 }
 
 @Entity()

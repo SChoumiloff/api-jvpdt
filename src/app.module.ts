@@ -8,6 +8,7 @@ import { PassportModule } from '@nestjs/passport';
 import { JwtModule } from '@nestjs/jwt';
 import { LoggerMiddleware } from 'libs/common/src/middlewares';
 import { MinioClientModule } from './minio-client/minio-client.module';
+import { DocumentsModule } from './documents/documents.module';
 
 @Module({
   imports: [
@@ -44,6 +45,7 @@ import { MinioClientModule } from './minio-client/minio-client.module';
     UsersModule,
     StrategiesModule,
     MinioClientModule,
+    DocumentsModule,
   ],
 })
 export class AppModule {

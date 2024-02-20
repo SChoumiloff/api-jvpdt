@@ -14,7 +14,7 @@ import {
   GetCurrentUserId,
   Public,
 } from 'libs/common/src/decorators';
-import { AuthDto } from 'src/dto/auth/auth.dto';
+import { AuthDto } from 'libs/common/src/dto/auth/auth.dto';
 import { CreateUserDto } from 'src/users/dto/create-user.dto';
 import { AccessTokenGuard, RefreshTokenGuard } from 'libs/common/src/guards';
 import { Request } from 'express';
