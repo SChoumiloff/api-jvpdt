@@ -9,6 +9,9 @@ import { JwtModule } from '@nestjs/jwt';
 import { LoggerMiddleware } from 'libs/common/src/middlewares';
 import { MinioClientModule } from './minio-client/minio-client.module';
 import { DocumentsModule } from './documents/documents.module';
+import { MailModule } from './mail/mail.module';
+import { APP_GUARD } from '@nestjs/core';
+import { RolesGuard } from 'libs/common/src/guards';
 
 @Module({
   imports: [
@@ -46,7 +49,14 @@ import { DocumentsModule } from './documents/documents.module';
     StrategiesModule,
     MinioClientModule,
     DocumentsModule,
+    MailModule,
   ],
+  providers: [
+    {
+      provide: APP_GUARD,
+      useClass: RolesGuard,
+    },
+  ]
 })
 export class AppModule {
   configure(consumer: MiddlewareConsumer) {

@@ -1,8 +1,9 @@
 import { ForbiddenException, Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
+import { RegisterDto } from 'libs/common/src/dto/auth';
 import { AuthDto } from 'libs/common/src/dto/auth/auth.dto';
-import { CreateUserDto } from 'src/users/dto/create-user.dto';
+import { CreateUserDto } from 'libs/common/src/dto/user/create-user.dto';
 import { User } from 'src/users/entities/user.entity';
 import { UsersService } from 'src/users/users.service';
 
@@ -16,6 +17,7 @@ export interface PayloadAt {
   email: string;
   firstname: string;
   lastname: string;
+  role : string[];
 }
 
 export interface PayloadRt {
@@ -70,7 +72,8 @@ export class AuthService {
     return tokens;
   }
 
-  async register(dto: CreateUserDto): Promise<Tokens> {
+  async register(dto: RegisterDto): Promise<Tokens> {
+    
     const user: User = await this.userService.create(dto);
     const tokens: Tokens = await this.getTokens(user);
     await this.userService.update(user.id, {
@@ -87,6 +90,7 @@ export class AuthService {
           email: user.email,
           firstname: user.firstname,
           lastname: user.lastname,
+          role: user.role
         } as PayloadAt,
         {
           secret: this.configService.get<string>('JWT_SECRET'),

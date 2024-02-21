@@ -68,4 +68,6 @@ export class MinioClientService {
   async deleteDocument(filename: string) : Promise<void> {
     await this.minio.client.removeObject(this.baseBucket, filename)
   }
+
+
 }

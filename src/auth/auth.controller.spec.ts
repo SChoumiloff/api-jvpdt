@@ -3,7 +3,7 @@ import { AuthController } from './auth.controller';
 import { AuthService, Tokens } from './auth.service';
 import { HttpCode, HttpStatus } from '@nestjs/common';
 import { AuthDto } from 'libs/common/src/dto/auth/auth.dto';
-import { CreateUserDto } from 'src/users/dto/create-user.dto';
+import { CreateUserDto } from 'libs/common/src/dto/user/create-user.dto';
 import { User } from 'src/users/entities/user.entity';
 
 describe('AuthController', () => {

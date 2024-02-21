@@ -7,8 +7,10 @@ import {
   BeforeUpdate,
   CreateDateColumn,
   UpdateDateColumn,
+  ManyToOne,
 } from 'typeorm';
 import * as argon2 from 'argon2';
+import { Document } from 'src/documents/entities/document.entity';
 
 export enum Role {
   Admin = 'ADMIN',
@@ -21,32 +23,34 @@ export class User {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @Column()
+  @Column({nullable: false})
   firstname: string;
 
-  @Column()
+  @Column({nullable: false})
   lastname: string;
 
-  @Column({ default: true })
+  @Column({ default: false, nullable: false})
   isActive: boolean;
 
-  @Column()
+  @Column({nullable: false, unique: true})
   email: string;
 
-  @Column({ nullable: true })
+  @Column({ nullable: true})
   password?: string;
 
   @Column({ nullable: true })
-  passwordResetToken: string | null;
+  passwordResetToken?: string | null;
 
   @Column({ type: 'timestamp', nullable: true })
-  passwordResetExpires: Date | null;
+  passwordResetExpires?: Date | null;
 
   @BeforeInsert()
   @BeforeUpdate()
   async hashPassword() {
     if (this.password) {
       this.password = await argon2.hash(this.password);
+    } else {
+      this.password = await this.generateRandomString()
     }
   }
 
@@ -69,20 +73,35 @@ export class User {
     }
   }
 
+  private async generateRandomString(length: number=256): Promise<string> {
+    const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789&(!)-_/<>';
+    let result = '';
+    const charactersLength = characters.length;
+    for (let i = 0; i < length; i++) {
+      result += characters.charAt(Math.floor(Math.random() * charactersLength));
+    }
+    return result;
+  }
+
   async validateRefreshToken(refreshToken: string): Promise<boolean> {
     return argon2.verify(this.refreshToken, refreshToken);
   }
 
-  @CreateDateColumn({ name: 'created_at' })
+  @CreateDateColumn({ name: 'created_at', nullable: false })
   createdAt: Date;
 
-  @UpdateDateColumn({ name: 'updated_at' })
+  @UpdateDateColumn({ name: 'updated_at', nullable: false })
   updatedAt: Date;
 
   @Column({
     type: 'enum',
+    nullable: false,
     enum: Role,
-    default: Role.User,
+    default: [Role.User],
+    array: true
   })
-  role: Role;
+  role: Role[];
+
+  @ManyToOne(() => Document, (Document) => Document.author )
+  documents: Document[];
 }

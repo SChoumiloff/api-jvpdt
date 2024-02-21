@@ -3,12 +3,13 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { CreateUserDto } from './dto/create-user.dto';
-import { UpdateUserDto } from './dto/update-user.dto';
+import { CreateUserDto } from '../../libs/common/src/dto/user/create-user.dto';
+import { UpdateUserDto } from '../../libs/common/src/dto/user/update-user.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { User } from './entities/user.entity';
 import { Repository } from 'typeorm';
-import { Profile } from 'passport-google-oauth20';
+import { RegisterDto } from 'libs/common/src/dto/auth';
+import { register } from 'module';
 
 @Injectable()
 export class UsersService {
@@ -24,6 +25,17 @@ export class UsersService {
       );
     }
     const user: User = await this.userRepository.create(createUserDto);
+    return await this.userRepository.save(user);
+  }
+
+  async createFromRegister(dto: RegisterDto) : Promise<User> {
+    const userExist: User = await this.findOneByEmail(dto.email);
+    if (userExist) {
+      throw new ConflictException(
+        `Un compte existe déjà avec cet email (${dto.email})`,
+      );
+    }
+    const user: User = await this.userRepository.create(dto);
     return await this.userRepository.save(user);
   }
 

@@ -1,5 +1,6 @@
 import { Exclude } from "class-transformer";
-import { Column, CreateDateColumn, Entity, PrimaryGeneratedColumn, UpdateDateColumn } from "typeorm";
+import { User } from "src/users/entities/user.entity";
+import { Column, CreateDateColumn, Entity, ManyToOne, PrimaryGeneratedColumn, UpdateDateColumn } from "typeorm";
 
 @Entity()
 export class Document {
@@ -15,6 +16,15 @@ export class Document {
     @Exclude()
     @Column()
     documentPath: string;
+
+    @Column("varchar", {array: true})
+    keyWords: string[]
+
+    @Column("boolean", {default: false})
+    isActiveDoc: boolean
+
+    @ManyToOne(() => User, (User) => User.documents)
+    author: User;
 
     @Exclude()
     @CreateDateColumn({ name: 'created_at' })
