@@ -18,13 +18,21 @@ import { AuthDto } from 'libs/common/src/dto/auth/auth.dto';
 import { AccessTokenGuard, RefreshTokenGuard } from 'libs/common/src/guards';
 import { Request } from 'express';
 import { RegisterDto } from 'libs/common/src/dto/auth';
+import { Throttle, ThrottlerGuard } from '@nestjs/throttler';
 
 @Controller({
   path: 'auth',
 })
+
 export class AuthController {
   constructor(private authService: AuthService) {}
 
+  @Throttle({
+    default: {
+      limit: 5,
+      ttl: 60000
+    }
+  })
   @Public()
   @Post('/login')
   @HttpCode(HttpStatus.OK)
@@ -32,6 +40,12 @@ export class AuthController {
     return await this.authService.login(dto);
   }
 
+  @Throttle({
+    default: {
+      limit: 2,
+      ttl: 60000
+    }
+  })
   @Public()
   @Post('/register')
   @HttpCode(HttpStatus.CREATED)

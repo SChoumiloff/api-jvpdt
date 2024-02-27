@@ -1,5 +1,6 @@
 import {
   ConflictException,
+  ForbiddenException,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
@@ -9,7 +10,6 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { User } from './entities/user.entity';
 import { Repository } from 'typeorm';
 import { RegisterDto } from 'libs/common/src/dto/auth';
-import { register } from 'module';
 
 @Injectable()
 export class UsersService {
@@ -25,6 +25,9 @@ export class UsersService {
       );
     }
     const user: User = await this.userRepository.create(createUserDto);
+    await user.setCreatePasswordInfo();
+    //TODO -> envoyer un mail thx to mailService 
+    //(Un compte vous a été assigné, suivez ce lien pour créer votre mot de passe)
     return await this.userRepository.save(user);
   }
 
@@ -37,6 +40,31 @@ export class UsersService {
     }
     const user: User = await this.userRepository.create(dto);
     return await this.userRepository.save(user);
+  }
+
+  async updatePassword(password: string, id: number) : Promise<User> {
+    const user: User = await this.findOne(id);
+    if (!user) {
+      throw new NotFoundException(
+        `Cet utilisateur n'existe pas`
+      )
+    }
+    return await this.userRepository.save(await user.updatePassword(password));
+  }
+
+  async findUserByCreatePasswordToken(token: string) : Promise<User> {
+    return await this.userRepository.findOneBy({
+      passwordCreateToken: token
+    })
+  }
+
+  async createPassword(password: string, user: User) : Promise<User> {
+    if (!user.passwordCreateExpires || user.passwordCreateExpires > new Date()) {
+      throw new ForbiddenException(`
+        L'accès est expiré ou interdit
+      `)
+    }
+    return this.userRepository.save(await user.createPassword(password));
   }
 
   async findAll(): Promise<User[]> {
@@ -63,6 +91,14 @@ export class UsersService {
       throw new NotFoundException(
         `Aucun utilisateur n'a été trouvé pour l'id: ${id}`,
       );
+    }
+    if ('email' in updateUserDto) {
+      const possibleUser: User = await this.findOneByEmail(updateUserDto.email)
+      if (possibleUser && possibleUser.id !== user.id) {
+        throw new ConflictException(`
+          Un compte est déjà associé à cet email
+        `)
+      }
     }
     Object.assign(user, updateUserDto);
     await this.userRepository.save(user);

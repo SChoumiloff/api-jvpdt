@@ -10,11 +10,14 @@ import { LoggerMiddleware } from 'libs/common/src/middlewares';
 import { MinioClientModule } from './minio-client/minio-client.module';
 import { DocumentsModule } from './documents/documents.module';
 import { MailModule } from './mail/mail.module';
-import { APP_GUARD } from '@nestjs/core';
-import { RolesGuard } from 'libs/common/src/guards';
+import { ThrottlerModule } from '@nestjs/throttler';
 
 @Module({
   imports: [
+    ThrottlerModule.forRoot([{
+      ttl: 60000,
+      limit: 10,
+    }]),
     ConfigModule.forRoot({
       isGlobal: true,
     }),
@@ -43,7 +46,6 @@ import { RolesGuard } from 'libs/common/src/guards';
         entities: [__dirname + '/**/entities/*.entity{.ts,.js}'],
       }),
     }),
-    PassportModule.register({ session: true }),
     AuthModule,
     UsersModule,
     StrategiesModule,
@@ -51,12 +53,6 @@ import { RolesGuard } from 'libs/common/src/guards';
     DocumentsModule,
     MailModule,
   ],
-  providers: [
-    {
-      provide: APP_GUARD,
-      useClass: RolesGuard,
-    },
-  ]
 })
 export class AppModule {
   configure(consumer: MiddlewareConsumer) {

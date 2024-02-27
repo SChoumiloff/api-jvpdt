@@ -6,6 +6,7 @@ import { AuthDto } from 'libs/common/src/dto/auth/auth.dto';
 import { CreateUserDto } from 'libs/common/src/dto/user/create-user.dto';
 import { User } from 'src/users/entities/user.entity';
 import { UsersService } from 'src/users/users.service';
+import * as argon2 from 'argon2';
 
 export interface Tokens {
   access_token: string;
@@ -13,15 +14,16 @@ export interface Tokens {
 }
 
 export interface PayloadAt {
-  sub: number;
+  id: number;
   email: string;
   firstname: string;
   lastname: string;
   role : string[];
+  isActive: boolean;
 }
 
 export interface PayloadRt {
-  sub: number;
+  id: number;
   email: string;
 }
 
@@ -40,8 +42,9 @@ export class AuthService {
     if (!user) {
       throw new ForbiddenException(`Access denied`);
     } else {
-      if (!user.validatePassword(dto.password)) {
-        throw new ForbiddenException(`Access denied`);
+      const isValid: boolean = await user.validatePassword(dto.password)
+      if (!isValid) {
+        throw new ForbiddenException(`Access denied : bad password`);
       } else {
         const tokens: Tokens = await this.getTokens(user);
         await this.userService.update(user.id, {
@@ -86,11 +89,12 @@ export class AuthService {
     const [accessToken, refreshToken] = await Promise.all([
       this.jwtService.signAsync(
         {
-          sub: user.id,
+          id: user.id,
           email: user.email,
           firstname: user.firstname,
           lastname: user.lastname,
-          role: user.role
+          role: user.role,
+          isActive: user.isActive
         } as PayloadAt,
         {
           secret: this.configService.get<string>('JWT_SECRET'),
@@ -99,7 +103,7 @@ export class AuthService {
       ),
       this.jwtService.signAsync(
         {
-          sub: user.id,
+          id: user.id,
           email: user.email,
         } as PayloadRt,
         {

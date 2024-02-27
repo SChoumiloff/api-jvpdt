@@ -1,17 +1,21 @@
-import { ArrayMaxSize, ArrayMinSize, IsArray, IsNotEmpty, IsString, Max, MaxLength, MinLength } from "class-validator";
+import { ArrayMaxSize, ArrayMinSize, IsArray, IsBoolean, IsNotEmpty, IsOptional, IsString, Max, MaxLength, MinLength } from "class-validator";
 
 export class CreateDocumentDto {
 
     @IsNotEmpty()
     @IsString()
     @MaxLength(100)
-    @MinLength(15)
-    documenName: string;
+    @MinLength(5)
+    documentName: string;
+
+    @IsBoolean()
+    @IsOptional()
+    isActiveDoc?: boolean;
 
     @IsNotEmpty()
     @IsString()
     @MaxLength(600)
-    @MinLength(150)
+    @MinLength(100)
     documentDescription: string;
 
     @IsNotEmpty()

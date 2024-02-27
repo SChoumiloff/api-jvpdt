@@ -1,6 +1,6 @@
 import { Exclude } from "class-transformer";
 import { User } from "src/users/entities/user.entity";
-import { Column, CreateDateColumn, Entity, ManyToOne, PrimaryGeneratedColumn, UpdateDateColumn } from "typeorm";
+import { Column, CreateDateColumn, Entity, JoinTable, ManyToOne, PrimaryGeneratedColumn, UpdateDateColumn } from "typeorm";
 
 @Entity()
 export class Document {
@@ -20,11 +20,15 @@ export class Document {
     @Column("varchar", {array: true})
     keyWords: string[]
 
-    @Column("boolean", {default: false})
+    @Column("boolean", {default: false, nullable: true})
     isActiveDoc: boolean
 
-    @ManyToOne(() => User, (User) => User.documents)
+    @ManyToOne(() => User, (User) => User.lastModifDocs, {eager: true, nullable: true})
+    lastModifier: User
+
+    @ManyToOne(() => User, (User) => User.documents, {eager: true})
     author: User;
+
 
     @Exclude()
     @CreateDateColumn({ name: 'created_at' })

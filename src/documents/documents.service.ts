@@ -5,48 +5,84 @@ import { Document } from './entities/document.entity';
 import { BufferedFile } from 'libs/common/src/dto/minio';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
+import { Readable } from 'stream';
+import { User } from 'src/users/entities/user.entity';
 
 @Injectable()
 export class DocumentsService {
     constructor(@InjectRepository(Document) private documentRepository: Repository<Document>,
         private readonly minioService: MinioClientService) {}
 
-    async createDocument(dto: CreateDocumentDto, file: BufferedFile) : Promise<Document> {
+    async createDocument(user: User, dto: CreateDocumentDto, file: BufferedFile) : Promise<Document> {
         try {
-            const fileName: string = await this.minioService.uploadDocument(file);
-            const doc: Document = await this.documentRepository.create(dto);
+            const filepath: string = await this.minioService.uploadDocument(file);
+            const doc: Document = this.documentRepository.create();
+            Object.assign(doc, dto);
+            doc.author = user;
+            doc.documentPath = filepath
             return await this.documentRepository.save(doc);
         } catch(error) {
             throw new InternalServerErrorException(`Impossible de charger le fichier`)
         }
     }
 
-    async deleteDocument(id: number) : Promise<void> {
+    async updateDocument(id: number, currentUser: User, dto?: UpdateDocumentDto, file?: BufferedFile) {
         try {
-            const doc: Document = await this.getDocument(id);
+            const doc: Document = await this.documentRepository.findOneBy({
+                id: id
+            })
             if (!doc) {
-                throw new NotFoundException(`Le document d'id : ${id} n'existe pas`);
+                throw new NotFoundException(`
+                    Ce document n'existe pas
+                `)
             }
-            await this.minioService.deleteDocument(doc.documentPath);
-            await this.documentRepository.remove(doc);
+            if (dto) {
+                Object.assign(doc, dto);
+            }
+            if (file) {
+                await this.minioService.deleteDocument(doc.documentPath)
+                const newFilename: string = await this.minioService.uploadDocument(file);
+                doc.documentPath = newFilename;
+            }
+            doc.lastModifier = currentUser
+            return await this.documentRepository.save(doc);
         } catch (error) {
-            throw new InternalServerErrorException(`Impossible de supprimer le document d'id : ${id}`)
+            throw new InternalServerErrorException(`Impossible de charger le fichier`)
         }
     }
 
-    async updateDocument(id: number, dto: UpdateDocumentDto, file?: BufferedFile) : Promise<Document> {
-        const doc: Document =  await this.getDocument(id);
+    async removeDocument(id: number) : Promise<void> {
+        const doc: Document = await this.documentRepository.findOneBy({
+            id: id
+        })
         if (!doc) {
-            throw new NotFoundException(`Impossible de trouver le document d'id: ${id}`)
-        } else {
-            if (file) {
-                await this.minioService.deleteDocument(doc.documentPath);
-                const newName: string = await this.minioService.uploadDocument(file);
-                doc.documentPath = newName;
-            } 
-            Object.assign(doc, dto)
-            return this.documentRepository.save(doc)
+            throw new NotFoundException(`
+                Le document d'id ${id} n'existe pas
+            `)
         }
+        this.documentRepository.remove(doc);
+    }
+
+    async streamDocument(id: number) : Promise<Readable> {
+        const doc: Document = await this.getDocument(id);
+        if (!doc) {
+            throw new NotFoundException(`
+                Le document d'id ${id} n'existe pas
+            `)
+        }
+        return await this.minioService.findObject(doc.documentPath)
+    }
+
+    async listAllActiveDocument() : Promise<Document[]> {
+        return await this.documentRepository.findBy({
+            isActiveDoc: true
+        })
+    }
+
+    async listAllUnactiveDocument() : Promise<Document[]> {
+        return await this.documentRepository.findBy({
+            isActiveDoc: false
+        })
     }
 
     async getDocument(id): Promise<Document> {
