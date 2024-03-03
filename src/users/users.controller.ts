@@ -15,10 +15,8 @@ import {
 import { UsersService } from './users.service';
 import { CreateUserDto } from '../../libs/common/src/dto/user/create-user.dto';
 import { UpdateUserDto } from '../../libs/common/src/dto/user/update-user.dto';
-import { AccessTokenGuard } from 'libs/common/src/guards';
 import { Role, User } from './entities/user.entity';
 import { GetCurrentUser} from 'libs/common/src/decorators';
-import { Actions } from 'libs/common/src/enums/actions.enum';
 import { CreatePasswordDto } from 'libs/common/src/dto/user/create-password.dto';
 import { Action } from 'rxjs/internal/scheduler/Action';
 

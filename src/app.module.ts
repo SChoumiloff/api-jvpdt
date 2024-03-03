@@ -11,6 +11,8 @@ import { MinioClientModule } from './minio-client/minio-client.module';
 import { DocumentsModule } from './documents/documents.module';
 import { MailModule } from './mail/mail.module';
 import { ThrottlerModule } from '@nestjs/throttler';
+import { CaslModule } from 'nest-casl';
+import { Role } from './users/entities/user.entity';
 
 @Module({
   imports: [
@@ -45,6 +47,10 @@ import { ThrottlerModule } from '@nestjs/throttler';
         url: config.get<string>('URI'),
         entities: [__dirname + '/**/entities/*.entity{.ts,.js}'],
       }),
+    }),
+    CaslModule.forRoot<Role>({
+      superuserRole: Role.Admin,
+      getUserFromRequest: (request) => request.currentUser,
     }),
     AuthModule,
     UsersModule,

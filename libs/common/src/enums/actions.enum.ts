@@ -1,7 +1,8 @@
-export enum Actions {
-    Manage = 'manage',
-    Create = 'create',
-    Read = 'read',
-    Update = 'update',
-    Delete = 'delete',
-}
+export enum DefaultActions {
+    read = 'read',
+    aggregate = 'aggregate',
+    create = 'create',
+    update = 'update',
+    delete = 'delete',
+    manage = 'manage',
+  }
